@@ -8,6 +8,6 @@ export * as messages from './messages';
 export * from './Rule';
 export * from './RuleGroup';
 export * from './utils';
-export { QueryBuilder };
 import { QueryBuilder } from './QueryBuilder';
+export { QueryBuilder };
 export default QueryBuilder;
