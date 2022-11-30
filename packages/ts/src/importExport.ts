@@ -116,24 +116,20 @@ export interface RQBJsonLogicEndsWith {
 export type RQBJsonLogicVar = { var: string };
 export type RQBJsonLogic = RulesLogic<RQBJsonLogicStartsWith | RQBJsonLogicEndsWith>;
 
-export interface ParseCELOptions {
-  independentCombinators?: boolean;
+interface ParserCommonOptions {
   fields?: Field[] | OptionGroup<Field>[] | Record<string, Field>;
-  listsAsArrays?: boolean;
   getValueSources?: (field: string, operator: string) => ValueSources;
+  listsAsArrays?: boolean;
+  independentCombinators?: boolean;
 }
 
-export interface ParseSQLOptions {
-  independentCombinators?: boolean;
+export interface ParseSQLOptions extends ParserCommonOptions {
   paramPrefix?: string;
   params?: any[] | Record<string, any>;
-  listsAsArrays?: boolean;
-  fields?: Field[] | OptionGroup<Field>[] | Record<string, Field>;
-  getValueSources?: (field: string, operator: string) => ValueSources;
 }
 
-export interface ParseJsonLogicOptions {
-  listsAsArrays?: boolean;
-  fields?: Field[] | OptionGroup<Field>[] | Record<string, Field>;
-  getValueSources?: (field: string, operator: string) => ValueSources;
-}
+export type ParseCELOptions = ParserCommonOptions;
+
+export type ParseJsonLogicOptions = ParserCommonOptions;
+
+export type ParseMongoDbOptions = ParserCommonOptions;

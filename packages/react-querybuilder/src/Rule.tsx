@@ -25,6 +25,8 @@ export const Rule = ({
   dropMonitorId = '',
   dndRef = null,
   dragRef = null,
+  isDragging = false,
+  isOver = false,
 }: RuleProps) => {
   const {
     classNames,
@@ -56,7 +58,7 @@ export const Rule = ({
   const { moveRule, onPropChange, onRuleRemove } = actions;
   const disabled = !!parentDisabled || !!disabledProp;
 
-  const { field, operator, value, valueSource } = rule
+  const ruleObject = rule
     ? rule
     : {
         field: fieldProp,
@@ -64,6 +66,7 @@ export const Rule = ({
         value: valueProp,
         valueSource: valueSourceProp,
       };
+  const { field, operator, value, valueSource } = ruleObject;
 
   useDeprecatedProps('rule', !!rule);
 
@@ -145,7 +148,11 @@ export const Rule = ({
   const outerClassName = clsx(
     standardClassnames.rule,
     classNames.rule,
-    disabled ? standardClassnames.disabled : '',
+    {
+      [standardClassnames.disabled]: disabled,
+      [standardClassnames.dndDragging]: isDragging,
+      [standardClassnames.dndOver]: isOver,
+    },
     validationClassName
   );
 
@@ -257,6 +264,7 @@ export const Rule = ({
           disabled={disabled}
           context={context}
           validation={validationResult}
+          ruleOrGroup={ruleObject}
         />
       )}
       {showLockButtons && (
@@ -272,6 +280,7 @@ export const Rule = ({
           disabledTranslation={parentDisabled ? undefined : translations.lockRuleDisabled}
           context={context}
           validation={validationResult}
+          ruleOrGroup={ruleObject}
         />
       )}
       <RemoveRuleActionControlElement
@@ -285,6 +294,7 @@ export const Rule = ({
         disabled={disabled}
         context={context}
         validation={validationResult}
+        ruleOrGroup={ruleObject}
       />
     </div>
   );

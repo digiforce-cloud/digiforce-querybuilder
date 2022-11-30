@@ -25,7 +25,6 @@ const config = {
   deploymentBranch: 'gh-pages',
 
   plugins: [
-    ['docusaurus-plugin-less', { lessOptions: { javascriptEnabled: true } }],
     'docusaurus-plugin-sass',
     [
       '@docusaurus/plugin-client-redirects',
@@ -50,6 +49,9 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/react-querybuilder/react-querybuilder/edit/main/website/',
           versions: {
+            3: {
+              label: 'v3.x',
+            },
             4: {
               label: 'v4.x',
             },
@@ -135,7 +137,7 @@ const config = {
             className: 'header-github-link',
           },
           {
-            href: 'discord',
+            href: '/discord',
             'aria-label': 'Discord server',
             position: 'right',
             className: 'header-discord-link',

@@ -1,8 +1,9 @@
 import type {
   DefaultOperatorName,
   DefaultRuleGroupType,
+  DefaultRuleGroupTypeAny,
+  DefaultRuleGroupTypeIC,
   DefaultRuleType,
-  Field,
   JsonLogicReservedOperations,
   ParseJsonLogicOptions,
   RQBJsonLogic,
@@ -10,11 +11,9 @@ import type {
   ValueSource,
 } from '@react-querybuilder/ts/src/index.noReact';
 import { defaultOperatorNegationMap } from '../../defaults';
-import { filterFieldsByComparator } from '../../internal/filterFieldsByComparator';
-import { getValueSourcesUtil } from '../../internal/getValueSourcesUtil';
-import { uniqByName } from '../../internal/uniq';
+import { convertToIC } from '../convertQuery';
 import { isRuleGroupType } from '../isRuleGroup';
-import { isOptionGroupArray } from '../optGroupUtils';
+import { fieldIsValidUtil, getFieldsArray, isPojo } from '../parserUtils';
 import {
   isJsonLogicAnd,
   isJsonLogicBetweenExclusive,
@@ -43,75 +42,39 @@ const emptyRuleGroup: DefaultRuleGroupType = { combinator: 'and', rules: [] };
  * Converts a JsonLogic object into a query suitable for
  * the QueryBuilder component's `query` or `defaultQuery` props.
  */
-export const parseJsonLogic = (
-  rqbJsonLogic: RQBJsonLogic,
-  options?: ParseJsonLogicOptions
-): DefaultRuleGroupType => {
-  const listsAsArrays = !!options?.listsAsArrays;
-  let fieldsFlat: Field[] = [];
-  const getValueSources = options?.getValueSources;
-
-  if (options) {
-    const { fields } = options;
-    if (fields) {
-      const fieldsArray = Array.isArray(fields)
-        ? fields
-        : Object.keys(fields)
-            .map(fld => ({ ...fields[fld], name: fld }))
-            .sort((a, b) => a.label.localeCompare(b.label));
-      if (isOptionGroupArray(fieldsArray)) {
-        fieldsFlat = uniqByName(fieldsFlat.concat(...fieldsArray.map(opt => opt.options)));
-      } else {
-        fieldsFlat = uniqByName(fieldsArray);
-      }
-    }
+function parseJsonLogic(rqbJsonLogic: string | RQBJsonLogic): DefaultRuleGroupType;
+function parseJsonLogic(
+  rqbJsonLogic: string | RQBJsonLogic,
+  options: Omit<ParseJsonLogicOptions, 'independentCombinators'> & {
+    independentCombinators?: false;
   }
+): DefaultRuleGroupType;
+function parseJsonLogic(
+  rqbJsonLogic: string | RQBJsonLogic,
+  options: Omit<ParseJsonLogicOptions, 'independentCombinators'> & {
+    independentCombinators: true;
+  }
+): DefaultRuleGroupTypeIC;
+function parseJsonLogic(
+  rqbJsonLogic: string | RQBJsonLogic,
+  options: ParseJsonLogicOptions = {}
+): DefaultRuleGroupTypeAny {
+  const listsAsArrays = !!options.listsAsArrays;
+  const fieldsFlat = getFieldsArray(options.fields);
+  const getValueSources = options.getValueSources;
 
-  function fieldIsValid(
+  const fieldIsValid = (
     fieldName: string,
     operator: DefaultOperatorName,
     subordinateFieldName?: string
-  ) {
-    // If fields option was an empty array or undefined, then all identifiers
-    // are considered valid.
-    if (fieldsFlat.length === 0) return true;
-
-    let valid = false;
-
-    const primaryField = fieldsFlat.find(ff => ff.name === fieldName);
-    if (primaryField) {
-      if (
-        !subordinateFieldName &&
-        operator !== 'notNull' &&
-        operator !== 'null' &&
-        !getValueSourcesUtil(primaryField, operator, getValueSources).some(vs => vs === 'value')
-      ) {
-        valid = false;
-      } else {
-        valid = true;
-      }
-
-      if (valid && !!subordinateFieldName) {
-        if (
-          getValueSourcesUtil(primaryField, operator, getValueSources).some(vs => vs === 'field') &&
-          fieldName !== subordinateFieldName
-        ) {
-          const validSubordinateFields = filterFieldsByComparator(
-            primaryField,
-            fieldsFlat,
-            operator
-          ) as Field[];
-          if (!validSubordinateFields.find(vsf => vsf.name === subordinateFieldName)) {
-            valid = false;
-          }
-        } else {
-          valid = false;
-        }
-      }
-    }
-
-    return valid;
-  }
+  ) =>
+    fieldIsValidUtil({
+      fieldName,
+      fieldsFlat,
+      operator,
+      subordinateFieldName,
+      getValueSources,
+    });
 
   // Overload 1: Always return a rule group or false for the outermost logic object
   function processLogic(logic: RQBJsonLogic, outermost: true): DefaultRuleGroupType | false;
@@ -194,10 +157,10 @@ export const parseJsonLogic = (
       isRQBJsonLogicEndsWith(logic)
     ) {
       const [first, second] = keyValue;
-      if (isRQBJsonLogicVar(first) && typeof second !== 'object') {
+      if (isRQBJsonLogicVar(first) && !isPojo(second)) {
         field = first.var;
         value = second;
-      } else if (typeof first !== 'object' && isRQBJsonLogicVar(second)) {
+      } else if (!isPojo(first) && isRQBJsonLogicVar(second)) {
         field = second.var;
         value = first;
       } else if (isRQBJsonLogicVar(first) && isRQBJsonLogicVar(second)) {
@@ -210,9 +173,9 @@ export const parseJsonLogic = (
 
       // Translate operator if necessary
       if (isJsonLogicEqual(logic) || isJsonLogicStrictEqual(logic)) {
-        operator = '=';
+        operator = value === null ? 'null' : '=';
       } else if (isJsonLogicNotEqual(logic) || isJsonLogicStrictNotEqual(logic)) {
-        operator = '!=';
+        operator = value === null ? 'notNull' : '!=';
       } else if (isJsonLogicInString(logic)) {
         operator = 'contains';
       } else if (isRQBJsonLogicStartsWith(logic)) {
@@ -304,5 +267,10 @@ export const parseJsonLogic = (
   }
 
   const result = processLogic(logicRoot, true);
-  return !result ? emptyRuleGroup : result;
-};
+  const finalQuery: DefaultRuleGroupType = !result ? emptyRuleGroup : result;
+  return options.independentCombinators
+    ? convertToIC<DefaultRuleGroupTypeIC>(finalQuery)
+    : finalQuery;
+}
+
+export { parseJsonLogic };

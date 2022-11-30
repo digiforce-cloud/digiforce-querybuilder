@@ -9,7 +9,7 @@ import { parseJsonLogic } from './parseJsonLogic';
 
 const emptyRuleGroup: DefaultRuleGroupType = { combinator: 'and', rules: [] };
 
-it('ignors invalid logic', () => {
+it('ignores invalid logic', () => {
   expect(
     parseJsonLogic({
       and: [{ '===': [{ var: 'f1' }, { '+': [1, 1] }] }, { '!': false }, { '!!': false }],
@@ -28,6 +28,8 @@ describe('valueSource: "value"', () => {
           { '!=': [{ var: 'f1' }, 'Test'] },
           { '===': [{ var: 'f1' }, 'Test'] },
           { '!==': [{ var: 'f1' }, 'Test'] },
+          { '==': [{ var: 'f1' }, null] },
+          { '!=': [{ var: 'f1' }, null] },
           { '>': [{ var: 'f1' }, 1214] },
           { '>=': [{ var: 'f1' }, 1214] },
           { '<': [{ var: 'f1' }, 1214] },
@@ -53,6 +55,8 @@ describe('valueSource: "value"', () => {
         { field: 'f1', operator: '!=', value: 'Test' },
         { field: 'f1', operator: '=', value: 'Test' },
         { field: 'f1', operator: '!=', value: 'Test' },
+        { field: 'f1', operator: 'null', value: null },
+        { field: 'f1', operator: 'notNull', value: null },
         { field: 'f1', operator: '>', value: 1214 },
         { field: 'f1', operator: '>=', value: 1214 },
         { field: 'f1', operator: '<', value: 1214 },
@@ -370,6 +374,23 @@ it('translates lists as arrays', () => {
         value: ['f2', 'f3'],
         valueSource: 'field',
       },
+    ],
+  });
+});
+
+it('generates query with independent combinators', () => {
+  expect(
+    parseJsonLogic(
+      {
+        and: [{ '==': [{ var: 'f1' }, 'Test'] }, { '==': ['Test', { var: 'f1' }] }],
+      },
+      { independentCombinators: true }
+    )
+  ).toEqual({
+    rules: [
+      { field: 'f1', operator: '=', value: 'Test' },
+      'and',
+      { field: 'f1', operator: '=', value: 'Test' },
     ],
   });
 });

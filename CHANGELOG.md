@@ -5,15 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-<!--
 ## [Unreleased]
 
-### Changed
+- N/A
 
-#### ESM only
+## [v5.2.0] - 2022-11-26
 
-All packages published from this repository are now built as [ES modules only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). You may continue to use `react-querybuilder` and any of the compatibility packages in a CommonJS or UMD environment by using the latest v4 release.
--->
+### Added
+
+- [#403](https://github.com/react-querybuilder/react-querybuilder/issues/403) Add `onRemove` prop and pass rule/group to all `ActionElement`s (buttons).
+
+## [v5.1.3] - 2022-11-23
+
+### Fixed
+
+- [#387](https://github.com/react-querybuilder/react-querybuilder/issues/387) Support `antd` version 5.
+
+## [v5.1.2] - 2022-11-21
+
+### Fixed
+
+- [#399](https://github.com/react-querybuilder/react-querybuilder/issues/399)/[#401](https://github.com/react-querybuilder/react-querybuilder/issues/401) When dragging a rule or group over a group header, the `dndOver` class is no longer applied to child group headers.
+
+## [v5.1.1] - 2022-10-27
+
+### Fixed
+
+- `parseMongoDB` and `parseJsonLogic` now respect `independentCombinators` option.
+- Narrowed rule group types, like `DefaultRuleGroupType` and `DefaultRuleGroupTypeIC`, are respected by `convertFromIC` and `convertToIC`.
+
+<details>
+
+<summary>Miscellaneous</summary>
+
+- v3 documentation was migrated from dedicated README to website versioned docs
+
+</details>
+
+## [v5.1.0] - 2022-10-26
+
+### Fixed
+
+- [#394](https://github.com/react-querybuilder/react-querybuilder/issues/394) `parseJsonLogic` now handles `null` values correctly.
+
+### Added
+
+- [#392](https://github.com/react-querybuilder/react-querybuilder/issues/392) `parseMongoDB` utility for importing queries from [MongoDB](https://www.mongodb.com/).
 
 ## [v5.0.0] - 2022-10-22
 
@@ -972,8 +1009,12 @@ Maintenance release focused on converting to a monorepo with Vite driving the bu
 
 - Initial publish
 
-<!-- [unreleased]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.0.0...HEAD -->
-
+[unreleased]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.2.0...HEAD
+[v5.2.0]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.1.3...v5.2.0
+[v5.1.3]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.1.2...v5.1.3
+[v5.1.2]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.1.1...v5.1.2
+[v5.1.1]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.1.0...v5.1.1
+[v5.1.0]: https://github.com/react-querybuilder/react-querybuilder/compare/v5.0.0...v5.1.0
 [v5.0.0]: https://github.com/react-querybuilder/react-querybuilder/compare/v4.5.3...v5.0.0
 [v4.5.3]: https://github.com/react-querybuilder/react-querybuilder/compare/v4.5.2...v4.5.3
 [v4.5.2]: https://github.com/react-querybuilder/react-querybuilder/compare/v4.5.1...v4.5.2

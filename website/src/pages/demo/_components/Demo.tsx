@@ -11,6 +11,7 @@ import {
   formatQuery,
   parseCEL,
   parseJsonLogic,
+  parseMongoDB,
   parseSQL,
   QueryBuilder,
   version as rqbVersion,
@@ -46,6 +47,11 @@ const initialQuery = initialStateFromHash.query ?? defaultInitialQuery;
 const initialQueryIC = initialStateFromHash.queryIC ?? defaultInitialQueryIC;
 
 const initialSQL = `SELECT *\n  FROM my_table\n WHERE ${formatQuery(initialQuery, 'sql')};`;
+const initialMongoDB = JSON.stringify(
+  { firstName: { $regex: '^Stev' }, age: { $gt: 28 } },
+  null,
+  2
+);
 const initialCEL = `firstName.startsWith("Stev") && age > 28`;
 const initialJsonLogic = JSON.stringify(formatQuery(initialQuery, 'jsonlogic'), null, 2);
 
@@ -61,6 +67,17 @@ const notesSQL = (
   <em>
     SQL can either be the full <code>SELECT</code> statement or the <code>WHERE</code> clause by
     itself. Trailing semicolon is optional.
+  </em>
+);
+const notesMongoDB = (
+  <em>
+    Input must conform to the <a href="https://www.json.org/">JSON specification</a>. MongoDB
+    queries support an extended JSON format, so you may need to pre-parse query strings with a
+    library like{' '}
+    <a href="https://www.npmjs.com/package/mongodb-query-parser">
+      <code>mongodb-query-parser</code>
+    </a>
+    before submitting them here or passing them to <code>parseMongoDB</code>.
   </em>
 );
 const notesCEL = '';
@@ -89,6 +106,9 @@ export default function Demo({
   const [isSQLInputVisible, setIsSQLInputVisible] = useState(false);
   const [sql, setSQL] = useState(initialSQL);
   const [sqlParseError, setSQLParseError] = useState('');
+  const [isMongoDbInputVisible, setIsMongoDbInputVisible] = useState(false);
+  const [mongoDB, setMongoDB] = useState(initialMongoDB);
+  const [mongoDbParseError, setMongoDbParseError] = useState('');
   const [isCELInputVisible, setIsCELInputVisible] = useState(false);
   const [cel, setCEL] = useState(initialCEL);
   const [celParseError, setCELParseError] = useState('');
@@ -160,6 +180,19 @@ export default function Demo({
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setSQLParseError((err as Error).message);
+    }
+  };
+  const loadFromMongoDB = () => {
+    try {
+      const q = parseMongoDB(mongoDB);
+      const qIC = convertToIC(q);
+      setQuery(q);
+      setQueryIC(qIC);
+      setIsMongoDbInputVisible(false);
+      setMongoDbParseError('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setMongoDbParseError((err as Error).message);
     }
   };
   const loadFromCEL = () => {
@@ -335,6 +368,9 @@ export default function Demo({
           <button type="button" onClick={() => setIsSQLInputVisible(true)}>
             Import SQL
           </button>
+          <button type="button" onClick={() => setIsMongoDbInputVisible(true)}>
+            Import MongoDB
+          </button>
           <button type="button" onClick={() => setIsCELInputVisible(true)}>
             Import CEL
           </button>
@@ -389,6 +425,16 @@ export default function Demo({
         error={sqlParseError}
         loadQueryFromCode={loadFromSQL}
         notes={notesSQL}
+      />
+      <ImportModal
+        heading="Import MongoDB"
+        isOpen={isMongoDbInputVisible}
+        setIsOpen={setIsMongoDbInputVisible}
+        code={mongoDB}
+        setCode={setMongoDB}
+        error={mongoDbParseError}
+        loadQueryFromCode={loadFromMongoDB}
+        notes={notesMongoDB}
       />
       <ImportModal
         heading="Import CEL"
